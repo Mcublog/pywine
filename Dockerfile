@@ -2,10 +2,9 @@ FROM tobix/wine:stable
 MAINTAINER Tobias Gruetzmacher "tobias-docker@23.gs"
 
 ENV WINEDEBUG -all
-ENV WINEARCH win32
 ENV WINEPREFIX /opt/wineprefix
 
-COPY wine-init.sh SHA256SUMS.txt /tmp/helper/
+COPY wine-init.sh SHA256SUMS.txt keys.gpg /tmp/helper/
 COPY mkuserwineprefix /opt/
 
 # Prepare environment
@@ -13,15 +12,18 @@ RUN xvfb-run sh /tmp/helper/wine-init.sh
 
 # Install Python
 ARG PYVER=3.7.9
+# renovate: datasource=github-releases depName=upx/upx versioning=loose
+ARG UPX_VERSION=3.96
 
 RUN umask 0 && cd /tmp/helper && \
-  curl -LOO \
-    https://www.python.org/ftp/python/${PYVER}/python-${PYVER}.exe \
-    https://github.com/upx/upx/releases/download/v3.96/upx-3.96-win32.zip \
+  curl -LOOO \
+    https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-amd64.exe{,.asc} \
+    https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-win64.zip \
   && \
+  gpgv --keyring ./keys.gpg python-${PYTHON_VERSION}-amd64.exe.asc python-${PYTHON_VERSION}-amd64.exe && \
   sha256sum -c SHA256SUMS.txt && \
   xvfb-run sh -c "\
-    wine python-${PYVER}.exe /quiet TargetDir=C:\\Python37-32 \
+    wine python-${PYTHON_VERSION}-amd64.exe /quiet TargetDir=C:\\Python310 \
       Include_doc=0 InstallAllUsers=1 PrependPath=1; \
     wineserver -w" && \
   unzip upx*.zip && \
