@@ -26,7 +26,8 @@ RUN cd /tmp/helper && xvfb-run sh -c "\
     wineserver -w" && \
     unzip upx*.zip && \
     mv -v upx*/upx.exe ${WINEPREFIX}/drive_c/windows/ && \
-    cd .. && rm -Rf helper
+    cd .. && rm -Rf helper && \
+    rm -rf /tmp/.wine-0
 
 # Install some python software
 RUN umask 0 && xvfb-run sh -c "\
